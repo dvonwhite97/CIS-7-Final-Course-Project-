@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Blackjack - Minimal GUI</title>
+<style>
+  body {
+    background: #0b1120;
+    color: white;
+    font-family: sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+  .cards { display: flex; gap: 6px; margin: 10px 0; }
+  .card { padding: 8px 10px; border: 1px solid #555; border-radius: 4px; }
+  button { margin: 5px; padding: 6px 12px; cursor: pointer; }
+</style>
+</head>
+<body>
+  <h1>Blackjack (Minimal GUI)</h1>
+
+  <div>
+    <h3>Dealer (<span id="dealer-total">?</span>)</h3>
+    <div id="dealer-cards" class="cards"></div>
+
+    <h3>Player (<span id="player-total">?</span>)</h3>
+    <div id="player-cards" class="cards"></div>
+
+    <div>
+      <button id="btn-hit">Hit</button>
+      <button id="btn-stand">Stand</button>
+      <button id="btn-new">New Game</button>
+    </div>
+
+    <h3 id="status">Click "New Game" to start.</h3>
+  </div>
+
+<script>
+const suits = ["♠","♥","♦","♣"];
+const ranks = ["A","2","3","4","5","6","7","8","9","10","J","Q","K"];
+
+let deck=[], player=[], dealer=[], gameOver=false, playerStand=false;
+
+function createDeck(){
+  deck=[];
+  for(let s of suits){for(let r of ranks){deck.push({r,s,v:value(r)})}}
+}
+function value(r){
+  if(r==="A")return 11;
+  if(["J","Q","K"].includes(r))return 10;
+  return parseInt(r);
+}
+function shuffle(){
+  for(let i=deck.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [deck[i],deck[j]]=[deck[j],deck[i]];
+  }
+}
+function draw(){return deck.pop()}
+function total(hand){
+  let sum=0,a=0;
+  for(let c of hand){sum+=c.v;if(c.r==="A")a++}
+  while(sum>21&&a>0){sum-=10;a--}
+  return sum;
+}
+function start(){
+  createDeck();shuffle();
+  player=[draw(),draw()];
+  dealer=[draw(),draw()];
+  playerStand=false;gameOver=false;
+  show(true);
+  set("status","Game started. Hit or Stand?");
+}
+function hit(){
+  if(gameOver||playerStand)return;
+  player.push(draw());
+  show(true);
+  if(total(player)>21) end("dealer");
+}
+function stand(){
+  playerStand=true;
+  while(total(dealer)<17)dealer.push(draw());
+  end(compare());
+}
+function compare(){
+  const pt=total(player),dt=total(dealer);
+  if(pt>21)return"dealer";
+  if(dt>21)return"player";
+  if(pt>dt)return"player";
+  if(dt>pt)return"dealer";
+  return"push";
+}
+function end(result){
+  gameOver=true;
+  show(false);
+  if(result==="player")set("status","Player wins!");
+  else if(result==="dealer")set("status","Dealer wins.");
+  else set("status","Push (tie).");
+}
+function show(hideHole){
+  const pc=document.getElementById("player-cards"),
+        dc=document.getElementById("dealer-cards");
+  pc.innerHTML="";dc.innerHTML="";
+  player.forEach(c=>pc.innerHTML+=cardHTML(c));
+  dealer.forEach((c,i)=>{
+    dc.innerHTML+=hideHole&&i===1&&!playerStand&&!gameOver?"[Hidden]":cardHTML(c);
+  });
+  document.getElementById("player-total").textContent=total(player);
+  document.getElementById("dealer-total").textContent=hideHole?"?":total(dealer);
+}
+function cardHTML(c){return `<div class="card">${c.r}${c.s}</div>`}
+function set(id,text){document.getElementById(id).textContent=text;}
+
+document.getElementById("btn-hit").onclick=hit;
+document.getElementById("btn-stand").onclick=stand;
+document.getElementById("btn-new").onclick=start;
+</script>
+</body>
+</html>
