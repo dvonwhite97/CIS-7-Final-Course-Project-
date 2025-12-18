@@ -1,0 +1,127 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+using namespace std;
+
+int deck[52], dpos;
+int p[12], d[12], pc, dc;
+
+int val(int c){
+    int r = c % 13;
+    if(r == 0) return 11;
+    if(r >= 10) return 10;
+    return r + 1;
+}
+
+int total(int h[], int n){
+    int t = 0, a = 0;
+    for(int i = 0; i < n; i++){
+        t += val(h[i]);
+        if(h[i] % 13 == 0) a++;
+    }
+    while(t > 21 && a--) t -= 10;
+    return t;
+}
+
+int draw(){
+    return deck[dpos++];
+}
+
+double winProb(){
+    int safe = 0;
+    int current = total(p, pc);
+
+    for(int i = dpos; i < 52; i++){
+        if(current + val(deck[i]) <= 21)
+            safe++;
+    }
+
+    return (double)safe / (52 - dpos);
+}
+
+string cardName(int c){
+    string ranks[] = {"A","2","3","4","5","6","7","8","9","10","J","Q","K"};
+    string suits[] = {"♠","♥","♦","♣"};
+    return ranks[c % 13] + suits[c / 13];
+}
+
+void showHands(bool hideDealer){
+    cout << "\nPLAYER TOTAL: " << total(p, pc) << "  HAND: ";
+for(int i = 0; i < pc; i++)
+    cout << cardName(p[i]) << " ";
+
+cout << "\nChance of Winning Next Hit: "
+     << winProb() * 100 << "%";
+     
+    cout << "\nDEALER: ";
+    if(hideDealer){
+        cout << cardName(d[0]) << " ??";
+    } else {
+        for(int i = 0; i < dc; i++)
+            cout << cardName(d[i]) << " ";
+        cout << "  TOTAL: " << total(d, dc);
+    }
+    cout << "\n";
+}
+
+int main(){
+    srand((unsigned)time(0));
+
+    for(int i = 0; i < 52; i++) deck[i] = i;
+    for(int i = 51; i > 0; i--){
+        int j = rand() % (i + 1);
+        int tmp = deck[i];
+        deck[i] = deck[j];
+        deck[j] = tmp;
+    }
+
+    dpos = 0; pc = dc = 0;
+
+    p[pc++] = draw();
+    p[pc++] = draw();
+    d[dc++] = draw();
+    d[dc++] = draw();
+
+    int pt = total(p, pc), dt = total(d, dc);
+
+    if(pt == 21 || dt == 21){
+        showHands(false);
+        cout << "\nRESULT: "
+             << (pt == dt ? "PUSH" :
+                (pt == 21 ? "PLAYER BLACKJACK" : "DEALER BLACKJACK"))
+             << "\n";
+        return 0;
+    }
+
+    while(true){
+        showHands(true);
+        cout << "\nHIT or STAND? ";
+        string c; cin >> c;
+
+        if(c == "HIT" || c == "hit"){
+            p[pc++] = draw();
+            if(total(p, pc) > 21){
+                cout << "\nPLAYER BUSTS.\n";
+                break;
+            }
+        }
+        if(c == "STAND" || c == "stand") break;
+    }
+
+    while(total(d, dc) < 17)
+        d[dc++] = draw();
+
+    showHands(false);
+
+    pt = total(p, pc);
+    dt = total(d, dc);
+
+    cout << "\nRESULT: ";
+    if(pt > 21) cout << "DEALER WIN\n";
+    else if(dt > 21) cout << "PLAYER WIN (DEALER BUST)\n";
+    else if(pt > dt) cout << "PLAYER WIN\n";
+    else if(dt > pt) cout << "DEALER WIN\n";
+    else cout << "PUSH\n";
+
+    return 0;
+}
