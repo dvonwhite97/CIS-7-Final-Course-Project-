@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Blackjack GUI</title>
+
+<style>
+  body {
+    background:#0b1120;
+    color:#e5e7eb;
+    font-family: sans-serif;
+    text-align:center;
+    padding:20px;
+  }
+  .box {
+    border:1px solid #374151;
+    border-radius:6px;
+    padding:12px;
+    margin:10px auto;
+    width:300px;
+  }
+  button {
+    margin:6px;
+    padding:6px 14px;
+    cursor:pointer;
+  }
+</style>
+</head>
+
+<body>
+
+<h1>Blackjack</h1>
+
+<div class="box">
+  <h3>Game State</h3>
+  <p id="state">Waiting...</p>
+</div>
+
+<div class="box">
+  <h3>Player</h3>
+  <p>Total: <span id="pt">?</span></p>
+</div>
+
+<div class="box">
+  <h3>Dealer</h3>
+  <p>Total: <span id="dt">?</span></p>
+</div>
+
+<div class="box">
+  <button onclick="send('HIT')">Hit</button>
+  <button onclick="send('STAND')">Stand</button>
+</div>
+
+<script>
+function send(cmd){
+  fetch("input.txt", {
+    method:"POST",
+    body:cmd
+  });
+}
+
+function update(){
+  fetch("output.txt")
+    .then(r=>r.text())
+    .then(t=>{
+      let lines=t.split("\n");
+      lines.forEach(l=>{
+        if(l.startsWith("STATE="))
+          document.getElementById("state").innerText=l.slice(6);
+        if(l.startsWith("PT="))
+          document.getElementById("pt").innerText=l.slice(3);
+        if(l.startsWith("DT="))
+          document.getElementById("dt").innerText=l.slice(3);
+      });
+    });
+}
+
+setInterval(update, 500);
+</script>
+
+</body>
+</html>
