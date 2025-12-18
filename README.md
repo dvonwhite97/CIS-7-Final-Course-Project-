@@ -1,4 +1,5 @@
 General Project Summary:
+Authors: Dvon White
 A. Core Project Direction
 The objective of this project was to develop a console-based Blackjack simulation written entirely in C++, capable of modeling a complete round of play using standard Blackjack rules.
 An optional HTML/JavaScript graphical user interface (GUI) was included to display the program’s output for demonstration purposes, without modifying the core logic.
